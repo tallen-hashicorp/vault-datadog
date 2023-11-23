@@ -11,7 +11,8 @@ To enable the Datadog Agent to gather metrics from Vault Enterprise, you will ne
 * A Vault Enterprise environment. Refer to the Getting Started tutorial to install Vault.
 * Mac Workstation with MacOS 10.12 or higher, though much of this will be the same for other platforms.
 
-## Set up the Datadog agent locally
+## Set up the Datadog agent
+Install the datadog agent on your Vault servers with the following steps
 1. You will need an API key from Datadog. From the Datadog dashboard, select your user name at the bottom of the left navigation.
 ![Datadog](./docs/datadog.avif)
 2. Select **Organizational Settings**, and then API Keys which lists existing API keys.
@@ -29,3 +30,46 @@ DD_AGENT_MAJOR_VERSION=7 DD_API_KEY=$DATADOG_API_KEY \
 datadog-agent status
 ```
 If you encountered an error, try executing `datadog-agent stop` and then `datadog-agent run` again.
+
+## Set up the Vault integration
+Now we have the agent configured we can configure to send metrics, you need to set up access for the agent to connect to Datadog.
+1. Navigate to `/opt/datadog-agent/etc/conf.d/vault.d.`
+```bash
+cd /opt/datadog-agent/etc/conf.d/vault.d
+```
+2. In the `/vault.d` directory, make a copy of `conf.yaml.example.`
+```bash
+cp conf.yaml.example conf.yaml
+```
+3. Open the `conf.yaml` file with an editor of your choice. Find the `instances`: section, and notice that the `api_url` parameter points to the Vault address to pull metrics from which is set to the locally running Vault (http://localhost:8200/v1).
+
+Locate the no_token parameter and set it to true for the convenience of this tutorial.
+```yaml
+...snip...
+
+init_config:
+
+instances:
+   ## @param api_url - string - required
+   ## URL of the Vault to query.
+ - api_url: http://localhost:8200/v1
+
+   ## @param no_token - boolean - optional - default: false
+   ## Attempt metric collection without a token.
+   no_token: true
+```
+4. Restart the Datadog Agent to apply the configuration changes.
+```bash
+datadog-agent stop
+datadog-agent run
+```
+
+## Monitor the Vault metrics
+Now that the agent is installed and running, you need to validate that the agent is correctly sending data to Datadog. Metrics about both your workstation and your Vault Enterprise Instance should be streaming to Datadog.
+1. In your Datadog dashboard, select **Metrics > Explorer.**
+![datadog3](./docs/datadog3.avif)
+2. The **Explorer** page shows the default metrics of `system.cpu.user`.
+![datadog3](./docs/datadog4.avif)
+3. With **Metrics** selected, start typing in `vault`. and you will see a number of available Vault metrics.
+![datadog4](./docs/datadog4.avif)
+Explorer the available metrics collected by the Datadog.
